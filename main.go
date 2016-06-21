@@ -60,7 +60,7 @@ func Raffle(base string, post_id string, user_id string, ops *map[string]string)
 }
 
 var available_options []string = []string{"user_id", "post_id", "winners", "liked_users_only", "unique_winners"}
-var api_base string = string{"https://graph.facebook.com"}
+var api_base string = "https://graph.facebook.com"
 
 func WebRaffleHandler(wr http.ResponseWriter, req *http.Request) {
 	fmt.Println(req.URL.RawQuery)
