@@ -32,6 +32,6 @@ unique_winners    | Boolean | True if you want only unique winners              
 
 ## Example
 
-While the app is running open a browser or an HTTP Request Tool like curl or Postmam
+While the app is running open a browser or an HTTP Request Tool like curl or Postmam  
 A sample request is    
 >GET http://localhost:8080/raffle?user_id=123456&post_id=8910112&winners=5&liked_users_only=0&unique_winners=0
