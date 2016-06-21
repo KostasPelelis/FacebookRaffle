@@ -26,9 +26,9 @@ func Raffle(base string, post_id string, user_id string, ops *map[string]string)
 		res := fb.Get(current_url, params)
 		data := res["data"].([]interface{})
 		for i := range data {
-			fmt.Println(i)
-			//post := data[i].(map[string]interface{})
-			joined_users = append(joined_users, "asc")
+			post := data[i].(map[string]interface{})
+			fmt.Println(post)
+			joined_users = append(joined_users, post["from"].(string))
 		}
 		paging := res["paging"].(map[string]interface{})
 		u, err := url.Parse(paging["next"].(string))
@@ -44,23 +44,26 @@ func Raffle(base string, post_id string, user_id string, ops *map[string]string)
 		current_url = u.Path
 	}
 	var winners []string = []string{}
-	if val, ok := (*ops)["WINNERS"]; ok {
+	if val, ok := (*ops)["winners"]; ok {
 		lim, _ := strconv.Atoi(val)
 		for i := 0; i < lim; i++ {
 			winner_index := rand.Intn(len(joined_users))
+			// Here we should check the option liked_users_only
+			// That can be done using the facebook api to cross
+			// validate the potential winner if he also likes the page
 			winners = append(winners, joined_users[winner_index])
-			if _, okw := (*ops)["UNIQUE_WINNERS"]; okw {
+			if _, okw := (*ops)["unique_winners"]; okw {
 				joined_users = append(joined_users[:winner_index], joined_users[winner_index:]...)
 			}
 		}
 	}
 }
 
-var available_options []string = []string{"USER_ID", "POST_ID", "WINNERS", "LIKED_USERS_ONLY", "UNIQUE_WINNERS"}
+var available_options []string = []string{"user_id", "post_id", "winners", "liked_users_only", "unique_winners"}
+var api_base string = string{"https://graph.facebook.com"}
 
 func WebRaffleHandler(wr http.ResponseWriter, req *http.Request) {
 	fmt.Println(req.URL.RawQuery)
-	api_base := "https://graph.facebook.com"
 	var options map[string]string
 	options = make(map[string]string)
 	q, _ := url.ParseQuery(req.URL.RawQuery)
@@ -68,27 +71,25 @@ func WebRaffleHandler(wr http.ResponseWriter, req *http.Request) {
 		option := available_options[i]
 		if val, ok := q[option]; ok {
 			switch option {
-			case "USER_ID":
-				options["USER_ID"] = val[0]
-			case "POST_ID":
-				options["POST_ID"] = val[0]
-			case "WINNERS":
-				options["WINNERS"] = val[0]
-			case "LIKED_USERS_ONLY":
-				options["LIKED_USERS_ONLY"] = val[0]
-			case "UNIQUE_WINNERS":
-				options["UNIQUE_WINNERS"] = val[0]
+			case "user_id":
+				options["user_id"] = val[0]
+			case "post_id":
+				options["post_id"] = val[0]
+			case "winners":
+				options["winners"] = val[0]
+			case "liked_users_only":
+				options["liked_users_only"] = val[0]
+			case "unique_winners":
+				options["unique_winners"] = val[0]
 			default:
 				panic("Unrecognized option")
 			}
 		}
 	}
-	fmt.Println(options)
-	Raffle(api_base, options["POST_ID"], options["USER_ID"], &options)
+	Raffle(api_base, options["post_id"], options["user_id"], &options)
 }
 
 func main() {
-	fmt.Println("Starting")
 	http.HandleFunc("/raffle", WebRaffleHandler)
 	panic(http.ListenAndServe(":8080", nil))
 }
